@@ -10,6 +10,8 @@ import {
 } from 'react-icons/fa';
 import { SEOHead } from './SEOHead';
 import { StructuredData } from './StructuredData';
+import { Capacitor } from '@capacitor/core';
+import { Browser } from '@capacitor/browser';
 import './ApkDownloadsPage.css';
 
 interface AppApkInfo {
@@ -81,6 +83,22 @@ const APKS_DATA: AppApkInfo[] = [
 ];
 
 export function ApkDownloadsPage() {
+  const handleDownload = async (e: React.MouseEvent, downloadPath: string) => {
+    const fullUrl = downloadPath.startsWith('http')
+      ? downloadPath
+      : `https://roboticnaturalautofarming.com${downloadPath}`;
+
+    if (Capacitor.isNativePlatform()) {
+      e.preventDefault();
+      try {
+        await Browser.open({ url: fullUrl });
+        return;
+      } catch (err) {
+        console.warn('Capacitor Browser open failed, falling back to window.open', err);
+        window.open(fullUrl, '_system');
+      }
+    }
+  };
   return (
     <div className="apk-page-container">
       <SEOHead 
@@ -158,10 +176,11 @@ export function ApkDownloadsPage() {
 
               <div className="apk-card-actions">
                 <a 
-                  href={app.downloadUrl}
+                  href={`https://roboticnaturalautofarming.com${app.downloadUrl}`}
                   download={app.filename}
                   className="apk-download-btn"
                   style={{ backgroundColor: app.badgeColor }}
+                  onClick={(e) => handleDownload(e, app.downloadUrl)}
                 >
                   <FaDownload />
                   <span>Download APK ({app.size})</span>

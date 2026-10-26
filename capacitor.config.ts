@@ -6,7 +6,7 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   server: {
     androidScheme: 'https',
-    hostname: 'assuretechnologies-backend-production.up.railway.app'
+    hostname: 'assuretechnologies-backend-production-75c1.up.railway.app'
   },
   plugins: {
     CapacitorHttp: {
