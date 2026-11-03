@@ -91,7 +91,34 @@ export function OrderProductsPage() {
       // Ignore stale response if a newer search request was initiated
       if (seq !== searchSeqRef.current) return;
 
-      let fetchedProducts = response.data.data || [];
+      let fetchedProducts = (response.data.data || []).map((p: any) => {
+        const base = parseFloat(p.base_price) || 0;
+        const disc = parseFloat(p.discount) || 0;
+        const comm = parseFloat(p.admin_commission) || 0;
+        const slab = p.tax_slab != null ? parseFloat(p.tax_slab) : 18;
+        const cleanDisc = disc % 1 === 0 ? Math.round(disc) : parseFloat(disc.toFixed(2));
+
+        const adminCommission = base * (comm / 100);
+        const vendorDiscountedPrice = base * (1 - (disc / 100));
+        const sellingPriceExclTax = vendorDiscountedPrice + adminCommission;
+        const originalPriceExclTax = base + adminCommission;
+
+        const taxAmount = sellingPriceExclTax * (slab / 100);
+        const originalTaxAmount = originalPriceExclTax * (slab / 100);
+
+        const originalPrice = parseFloat((originalPriceExclTax + originalTaxAmount).toFixed(2));
+        const finalPrice = parseFloat((sellingPriceExclTax + taxAmount).toFixed(2));
+
+        return {
+          ...p,
+          originalPrice,
+          price: finalPrice,
+          discount: cleanDisc,
+          tax_slab: slab,
+          service: p.category || p.service || 'General',
+          image: p.banner ? (p.banner.startsWith('http') || p.banner.startsWith('blob:') ? p.banner : `${BASE_URL}${p.banner.startsWith('/') ? '' : '/'}${p.banner}`) : 'https://placehold.co/300x200?text=No+Image'
+        };
+      });
 
       if (isLoadMore) {
         setProducts(prev => [...prev, ...fetchedProducts]);

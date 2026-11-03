@@ -16,6 +16,7 @@ import { Link, useParams } from "react-router-dom";
 import { useAuth } from '../context/AuthContext';
 import { FaTruck } from "react-icons/fa";
 import { getProductOrderStatus, getServiceBookingStatus, getPaymentMethodLabel, getItemStatusText, getSafeTrackingUrl } from '../utils/orderStatus';
+import { isSameStateAsCompany, getGstStateCode } from '../data/gstStateCodes';
 import { Toast } from '../utils/errorHandler';
 import "./OrderDetailsPage.css";
 
@@ -246,6 +247,7 @@ export function OrderDetailsPage() {
             customerEmail: o.customer_email || (o.customer ? o.customer.email : null),
             companyName: o.company_name || null,
             gstNumber: o.gst_number || null,
+            isIntraState: isSameStateAsCompany(o.gst_state_code || (o.gst_number ? o.gst_number.slice(0, 2) : (o.customer ? getGstStateCode(o.customer.state_name) : getGstStateCode(o.customer_address)))),
             rawSubtotal: o.subtotal_amount ? Number(o.subtotal_amount) : (o.total_amount ? Math.round((Number(o.total_amount) / 1.18) * 100) / 100 : 0),
             rawTax: o.tax_amount ? Number(o.tax_amount) : (o.total_amount ? Math.round((Number(o.total_amount) - (Number(o.total_amount) / 1.18)) * 100) / 100 : 0),
             summary: {
@@ -674,12 +676,25 @@ export function OrderDetailsPage() {
                 <span>Item(s) Subtotal:</span>
                 <span>{orderDetails.summary?.itemsSubtotal}</span>
               </div>
-              {orderDetails.summary?.tax && (
-                <div className="summary-row">
-                  <span>Tax (18% GST):</span>
-                  <span>{orderDetails.summary?.tax}</span>
-                </div>
-              )}
+              {orderDetails.rawTax && orderDetails.rawTax > 0.001 ? (
+                orderDetails.isIntraState ? (
+                  <>
+                    <div className="summary-row">
+                      <span>CGST:</span>
+                      <span>₹{(orderDetails.rawTax / 2).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="summary-row">
+                      <span>SGST:</span>
+                      <span>₹{(orderDetails.rawTax / 2).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="summary-row">
+                    <span>IGST:</span>
+                    <span>₹{orderDetails.rawTax.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  </div>
+                )
+              ) : null}
               <div className="summary-row">
                 <span>Shipping:</span>
                 <span>{orderDetails.summary?.shipping}</span>

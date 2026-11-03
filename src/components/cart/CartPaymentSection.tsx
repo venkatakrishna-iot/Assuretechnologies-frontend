@@ -1,4 +1,5 @@
 import React from 'react';
+import { GST_STATE_CODES } from '../../data/gstStateCodes';
 
 interface CartPaymentSectionProps {
   needsGstInvoice: boolean;
@@ -7,6 +8,8 @@ interface CartPaymentSectionProps {
   onChangeCompanyName: (val: string) => void;
   orderGstNumber: string;
   onChangeGstNumber: (val: string) => void;
+  orderGstStateCode: string;
+  onChangeGstStateCode: (val: string) => void;
   paymentMethod: 'Online';
   onChangePaymentMethod: (method: 'Online') => void;
   onSubmitOrder: () => void;
@@ -22,6 +25,8 @@ export const CartPaymentSection: React.FC<CartPaymentSectionProps> = ({
   onChangeCompanyName,
   orderGstNumber,
   onChangeGstNumber,
+  orderGstStateCode,
+  onChangeGstStateCode,
   paymentMethod,
   onChangePaymentMethod,
   onSubmitOrder,
@@ -46,7 +51,21 @@ export const CartPaymentSection: React.FC<CartPaymentSectionProps> = ({
         </label>
 
         {needsGstInvoice && (
-          <div className="form-row">
+          <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+            <div className="form-group">
+              <label>GST State Code</label>
+              <select
+                value={orderGstStateCode}
+                onChange={e => onChangeGstStateCode(e.target.value)}
+                style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}
+              >
+                {GST_STATE_CODES.map(s => (
+                  <option key={s.code} value={s.code}>
+                    {s.code} - {s.name}
+                  </option>
+                ))}
+              </select>
+            </div>
             <div className="form-group">
               <label>Company Name</label>
               <input 

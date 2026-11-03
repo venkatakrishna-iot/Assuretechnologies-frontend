@@ -9,6 +9,7 @@ interface CartOrderSummaryProps {
   totalSavings: number;
   currentStep: 1 | 2 | 3;
   onPlaceOrderClick: () => void;
+  isSameState?: boolean;
 }
 
 export const CartOrderSummary: React.FC<CartOrderSummaryProps> = ({
@@ -18,7 +19,8 @@ export const CartOrderSummary: React.FC<CartOrderSummaryProps> = ({
   total,
   totalSavings,
   currentStep,
-  onPlaceOrderClick
+  onPlaceOrderClick,
+  isSameState = true
 }) => {
   return (
     <div className="cart-summary">
@@ -26,14 +28,34 @@ export const CartOrderSummary: React.FC<CartOrderSummaryProps> = ({
       <div className="summary-divider" />
 
       <div className="summary-row">
-        <span>Price ({itemCount} items)</span>
+        <span>Subtotal (Taxable)</span>
         <span>₹{subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
       </div>
 
-      <div className="summary-row">
-        <span>Tax (18% GST)</span>
-        <span>₹{tax.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-      </div>
+      {tax > 0.001 ? (
+        isSameState ? (
+          <>
+            <div className="summary-row">
+              <span>CGST</span>
+              <span>₹{(tax / 2).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            </div>
+            <div className="summary-row">
+              <span>SGST</span>
+              <span>₹{(tax / 2).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            </div>
+          </>
+        ) : (
+          <div className="summary-row">
+            <span>IGST</span>
+            <span>₹{tax.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+          </div>
+        )
+      ) : (
+        <div className="summary-row">
+          <span>Tax (GST)</span>
+          <span>₹0.00</span>
+        </div>
+      )}
 
       <div className="summary-row">
         <span>Delivery</span>

@@ -13,6 +13,7 @@ import { CartItemList } from './cart/CartItemList';
 import { CartAddressSection } from './cart/CartAddressSection';
 import { CartPaymentSection } from './cart/CartPaymentSection';
 import { CartOrderSummary } from './cart/CartOrderSummary';
+import { isSameStateAsCompany, getGstStateCode } from '../data/gstStateCodes';
 import './CartPage.css';
 
 declare global {
@@ -31,6 +32,8 @@ export function CartPage() {
   const [needsGstInvoice, setNeedsGstInvoice] = useState(false);
   const [orderCompanyName, setOrderCompanyName] = useState('');
   const [orderGstNumber, setOrderGstNumber] = useState('');
+  const [orderGstStateCode, setOrderGstStateCode] = useState('37');
+  const [customerProfile, setCustomerProfile] = useState<any>(null);
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string>('');
 
@@ -38,6 +41,37 @@ export function CartPage() {
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [isVerifyingPayment, setIsVerifyingPayment] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // Fetch logged in customer profile to strictly check Customer Registration State
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    API.get('/customer/profile').then(res => {
+      const data = res.data?.data || res.data;
+      setCustomerProfile(data);
+    }).catch(err => console.error('Failed to load customer profile', err));
+  }, [isLoggedIn]);
+
+  const handleGstStateCodeChange = (newCode: string) => {
+    setOrderGstStateCode(newCode);
+    if (!orderGstNumber) {
+      setOrderGstNumber(newCode);
+    } else if (orderGstNumber.length >= 2) {
+      setOrderGstNumber(newCode + orderGstNumber.slice(2));
+    } else {
+      setOrderGstNumber(newCode);
+    }
+  };
+
+  const handleGstNumberChange = (val: string) => {
+    const upper = val.toUpperCase();
+    setOrderGstNumber(upper);
+    if (upper.length >= 2) {
+      const detected = getGstStateCode(upper.slice(0, 2));
+      if (detected) {
+        setOrderGstStateCode(detected);
+      }
+    }
+  };
 
   const fetchAddresses = useCallback(async (newSelectedId?: string) => {
     if (!isLoggedIn) return;
@@ -80,10 +114,27 @@ export function CartPage() {
         const formattedProducts = res.data.data.map((p: any) => {
            const base = parseFloat(p.base_price) || 0;
            const disc = parseFloat(p.discount) || 0;
+           const comm = parseFloat(p.admin_commission) || 0;
+           const slab = p.tax_slab != null ? parseFloat(p.tax_slab) : 18;
+
+           const adminCommission = base * (comm / 100);
+           const vendorDiscountedPrice = base * (1 - (disc / 100));
+           const sellingPriceExclTax = vendorDiscountedPrice + adminCommission;
+           const originalPriceExclTax = base + adminCommission;
+
+           const taxAmount = sellingPriceExclTax * (slab / 100);
+           const originalTaxAmount = originalPriceExclTax * (slab / 100);
+
+           const originalPrice = parseFloat((originalPriceExclTax + originalTaxAmount).toFixed(2));
+           const finalPrice = parseFloat((sellingPriceExclTax + taxAmount).toFixed(2));
+
            return {
              ...p,
-             originalPrice: base,
-             price: base - (base * (disc / 100)),
+             originalPrice,
+             price: finalPrice,
+             selling_price_excl_tax: parseFloat(sellingPriceExclTax.toFixed(2)),
+             tax_amount: parseFloat(taxAmount.toFixed(2)),
+             tax_slab: slab,
              service: p.category || 'General',
              image: p.banner ? (p.banner.startsWith('http') || p.banner.startsWith('blob:') ? p.banner : `${BASE_URL}${p.banner.startsWith('/') ? '' : '/'}${p.banner}`) : 'https://placehold.co/300x200?text=No+Image'
            };
@@ -121,16 +172,45 @@ export function CartPage() {
     }).filter(item => item.product !== undefined);
   }, [cart, products]);
 
-  const subtotal = useMemo(() => {
-    return cartItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+  const { subtotal, tax, total } = useMemo(() => {
+    let baseSum = 0;
+    let taxSum = 0;
+    cartItems.forEach(item => {
+      const slab = (item.product as any).tax_slab != null ? Number((item.product as any).tax_slab) : 18;
+      const unitExcl = (item.product as any).selling_price_excl_tax != null
+        ? Number((item.product as any).selling_price_excl_tax)
+        : (item.product.price / (1 + (slab / 100)));
+      const itemBase = unitExcl * item.quantity;
+      const itemTotal = item.product.price * item.quantity;
+      const itemTax = itemTotal - itemBase;
+
+      baseSum += itemBase;
+      taxSum += itemTax;
+    });
+    return {
+      subtotal: Math.round(baseSum * 100) / 100,
+      tax: Math.round(taxSum * 100) / 100,
+      total: Math.round((baseSum + taxSum) * 100) / 100
+    };
   }, [cartItems]);
 
   const totalSavings = useMemo(() => {
     return cartItems.reduce((sum, item) => sum + ((item.product.originalPrice - item.product.price) * item.quantity), 0);
   }, [cartItems]);
 
-  const tax = subtotal * 0.18;
-  const total = subtotal + tax;
+  const isSameState = useMemo(() => {
+    if (needsGstInvoice) {
+      return isSameStateAsCompany(orderGstStateCode);
+    }
+    // Retail customer: strictly check customer registration state!
+    const regState = customerProfile?.state_name;
+    if (regState) {
+      return isSameStateAsCompany(regState);
+    }
+    // Fallback if profile not loaded yet: check selected address
+    const selectedAddr = addresses.find(a => a.id === selectedAddressId);
+    return isSameStateAsCompany(selectedAddr?.state);
+  }, [needsGstInvoice, orderGstStateCode, customerProfile, addresses, selectedAddressId]);
 
   const updateQty = (id: string, delta: number) => {
     const next = (cart[id] || 0) + delta;
@@ -177,6 +257,9 @@ export function CartPage() {
         customer_address: addressString,
         company_name: needsGstInvoice ? orderCompanyName : undefined,
         gst_number: needsGstInvoice ? orderGstNumber : undefined,
+        gst_state_code: needsGstInvoice
+          ? orderGstStateCode
+          : (customerProfile?.state_name ? getGstStateCode(customerProfile.state_name) : (selectedAddr?.state ? getGstStateCode(selectedAddr.state) : '37')),
         items: cartItems.map(ci => ({
           product_id: ci.product.id,
           qty: ci.quantity
@@ -368,7 +451,9 @@ export function CartPage() {
                 orderCompanyName={orderCompanyName}
                 onChangeCompanyName={setOrderCompanyName}
                 orderGstNumber={orderGstNumber}
-                onChangeGstNumber={setOrderGstNumber}
+                onChangeGstNumber={handleGstNumberChange}
+                orderGstStateCode={orderGstStateCode}
+                onChangeGstStateCode={handleGstStateCodeChange}
                 paymentMethod={paymentMethod}
                 onChangePaymentMethod={setPaymentMethod}
                 onSubmitOrder={submitOrder}
@@ -387,6 +472,7 @@ export function CartPage() {
             totalSavings={totalSavings}
             currentStep={currentStep}
             onPlaceOrderClick={handlePlaceOrderClick}
+            isSameState={isSameState}
           />
         </div>
       </div>

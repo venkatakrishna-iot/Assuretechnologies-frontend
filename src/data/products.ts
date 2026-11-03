@@ -4,7 +4,9 @@ export type Product = {
   service: string;
   price: number;
   originalPrice: number;
+  selling_price_excl_tax?: number;
   discount: number;
+  tax_slab?: number;
   description: string;
   image: string;
   rating: number;

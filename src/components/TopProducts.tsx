@@ -21,12 +21,27 @@ export function TopProducts() {
         products = products.map((p: any) => {
           const base = parseFloat(p.base_price) || 0;
           const disc = parseFloat(p.discount) || 0;
+          const comm = parseFloat(p.admin_commission) || 0;
+          const slab = p.tax_slab != null ? parseFloat(p.tax_slab) : 18;
           const cleanDisc = disc % 1 === 0 ? Math.round(disc) : parseFloat(disc.toFixed(2));
+
+          const adminCommission = base * (comm / 100);
+          const vendorDiscountedPrice = base * (1 - (disc / 100));
+          const sellingPriceExclTax = vendorDiscountedPrice + adminCommission;
+          const originalPriceExclTax = base + adminCommission;
+
+          const taxAmount = sellingPriceExclTax * (slab / 100);
+          const originalTaxAmount = originalPriceExclTax * (slab / 100);
+
+          const originalPrice = parseFloat((originalPriceExclTax + originalTaxAmount).toFixed(2));
+          const finalPrice = parseFloat((sellingPriceExclTax + taxAmount).toFixed(2));
+
           return {
             ...p,
-            originalPrice: base,
-            price: base - (base * (disc / 100)),
+            originalPrice,
+            price: finalPrice,
             discount: cleanDisc,
+            tax_slab: slab,
             rating: p.rating || 4,
             reviewCount: p.reviewCount || 15,
             service: p.category || 'General',
