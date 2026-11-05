@@ -8,12 +8,20 @@ export interface CustomField {
   options?: string[];
 }
 
+export interface PricingType {
+  id: string;
+  name: string;
+  label: string;
+}
+
 export interface BackendService {
   id: string;
   name: string;
   image?: string;
   prebooking_charge?: string;
   price?: string;
+  service_owner_type?: 'ADMIN' | 'PARTNER';
+  pricing_type?: PricingType;
   custom_fields?: CustomField[];
   category?: {
     id: string;
@@ -21,6 +29,9 @@ export interface BackendService {
   };
   rate?: number;
   pricingUnitName?: string;
+  pricingUnitLabel?: string;
+  tax_rate?: number;
+  admin_commission_rate?: number;
 }
 
 export const fetchAllServices = async (search = '') => {

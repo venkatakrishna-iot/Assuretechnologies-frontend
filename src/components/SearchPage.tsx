@@ -401,6 +401,7 @@ export function SearchPage() {
                       : service.prebooking_charge
                       ? `From ₹${parseFloat(service.prebooking_charge).toLocaleString('en-IN')}`
                       : 'Fixed Quote';
+                    const unitSuffix = (service.pricing_type?.name || service.pricingUnitName || '').replace(/^per\s+/i, '').trim();
 
                     return (
                       <div key={service.id} className="search-service-card">
@@ -424,7 +425,7 @@ export function SearchPage() {
 
                         <div className="search-service-footer">
                           <div className="search-service-rate">
-                            {priceDisplay} {service.pricingUnitName && <span>/ {service.pricingUnitName}</span>}
+                            {priceDisplay} {unitSuffix && <span>/ {unitSuffix}</span>}
                           </div>
 
                           <Link
