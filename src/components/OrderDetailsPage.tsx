@@ -208,7 +208,18 @@ export function OrderDetailsPage() {
             } : null,
             remainingBalance: s.Order?.remaining_balance ? parseFloat(s.Order.remaining_balance) : 0,
             remainingBalancePaid: s.Order?.remaining_balance_paid !== undefined ? Boolean(s.Order.remaining_balance_paid) : true,
-            rawOrderNumber: s.Order?.order_number
+            rawOrderNumber: s.Order?.order_number,
+            taxRate: s.tax_rate !== undefined ? s.tax_rate : (((s.Service || s.service)?.service_owner_type === 'PARTNER') ? 0 : 18),
+            remainingBalanceSubtotal: s.remaining_balance_subtotal !== undefined
+              ? s.remaining_balance_subtotal
+              : (((s.Service || s.service)?.service_owner_type === 'PARTNER')
+                ? (s.Order?.remaining_balance ? parseFloat(s.Order.remaining_balance) : 0)
+                : Math.round((parseFloat(s.Order?.remaining_balance || 0) / 1.18) * 100) / 100),
+            remainingBalanceTax: s.remaining_balance_tax !== undefined
+              ? s.remaining_balance_tax
+              : (((s.Service || s.service)?.service_owner_type === 'PARTNER')
+                ? 0
+                : Math.round((parseFloat(s.Order?.remaining_balance || 0) - (parseFloat(s.Order?.remaining_balance || 0) / 1.18)) * 100) / 100)
           };
 
           const mappedExtra = (s.extra_items || []).map((item: any) => ({
@@ -720,11 +731,13 @@ export function OrderDetailsPage() {
                 <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px dashed #cbd5e1' }}>
                   <div className="summary-row" style={{ color: '#475569', fontSize: '13px', marginTop: '4px' }}>
                     <span>Extra Items Amount:</span>
-                    <span>₹{Math.round(orderDetails.remainingBalance / 1.18).toLocaleString('en-IN')}</span>
+                    <span>₹{Number(orderDetails.remainingBalanceSubtotal ?? orderDetails.remainingBalance).toLocaleString('en-IN')}</span>
                   </div>
                   <div className="summary-row" style={{ color: '#475569', fontSize: '13px', marginTop: '4px' }}>
-                    <span>GST on Extra Items (18%):</span>
-                    <span>₹{Math.round(orderDetails.remainingBalance - (orderDetails.remainingBalance / 1.18)).toLocaleString('en-IN')}</span>
+                    <span>GST on Extra Items ({orderDetails.taxRate ?? 0}%{(orderDetails.taxRate ?? 0) === 0 ? ' - Exempt' : ''}):</span>
+                    <span style={(orderDetails.taxRate ?? 0) === 0 ? { color: '#16a34a', fontWeight: 600 } : undefined}>
+                      ₹{Number(orderDetails.remainingBalanceTax ?? 0).toLocaleString('en-IN')}
+                    </span>
                   </div>
                   <div className="summary-row" style={{ color: orderDetails.remainingBalancePaid ? '#166534' : '#b45309', fontWeight: '600', marginTop: '6px', fontSize: '15px' }}>
                     <span>{orderDetails.remainingBalancePaid ? 'Remaining Balance:' : 'Total Remaining Balance:'}</span>
