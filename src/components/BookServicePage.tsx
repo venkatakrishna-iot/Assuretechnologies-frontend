@@ -228,14 +228,52 @@ export function BookServicePage() {
   );
 
   const serviceRate = getServiceRate(selectedServiceObj);
-  const pricingUnit = selectedServiceObj?.pricingUnitName || 'Quantity';
-  // Dynamically check for a tax rate from the backend service object, fallback to 18%
-  const dynamicTaxRate = (selectedServiceObj as any)?.tax_rate || (selectedServiceObj as any)?.gst_rate || 18;
+  const pricingType = selectedServiceObj?.pricing_type;
+  const isVisitingFee = !selectedServiceObj?.price && Number(selectedServiceObj?.prebooking_charge) > 0;
+
+  // Raw name e.g. "per acre", clean unit e.g. "acre"
+  const rawPricingName = (pricingType?.name || selectedServiceObj?.pricingUnitName || '').trim();
+  const cleanUnit = rawPricingName ? rawPricingName.replace(/^per\s+/i, '').trim() : '';
+
+  // Dynamic Header: e.g. "Rate per Acre", "Visiting & Inspection Fee", or "Rate per Unit"
+  const rateHeader = (pricingType || rawPricingName)
+    ? (/^per\s+/i.test(rawPricingName) ? `Rate ${rawPricingName}` : `Rate per ${rawPricingName}`)
+    : isVisitingFee
+    ? 'Visiting & Inspection Fee'
+    : 'Rate per Unit';
+
+  // Unit suffix for rate display: e.g. "/ acre", "/ visit"
+  const rateUnitSuffix = cleanUnit ? `/ ${cleanUnit.toLowerCase()}` : isVisitingFee ? '/ visit' : '';
+
+  // Label for quantity input: uses Admin frontend label (e.g. "number of acres")
+  const quantityInputLabel = (pricingType?.label || selectedServiceObj?.pricingUnitLabel)
+    ? (pricingType?.label || selectedServiceObj?.pricingUnitLabel)
+    : cleanUnit
+    ? `Number of ${cleanUnit}`
+    : 'Quantity';
+
+  // Automatically default quantity to 1 for visiting fee
+  useEffect(() => {
+    if (selectedServiceObj) {
+      const isFee = !selectedServiceObj.price && Number(selectedServiceObj.prebooking_charge) > 0;
+      if (isFee) {
+        setBookingQuantity(1);
+      }
+    }
+  }, [selectedServiceObj]);
+
+  // SSOT: Tax Rate strictly driven by Backend Service (0% for Partner, 18% for Admin default)
+  const isPartner = selectedServiceObj?.service_owner_type === 'PARTNER';
+  const rawTaxRate = selectedServiceObj?.tax_rate;
+  const dynamicTaxRate = (rawTaxRate !== undefined && rawTaxRate !== null && !isNaN(Number(rawTaxRate)))
+    ? Number(rawTaxRate)
+    : (isPartner ? 0 : 18);
   const taxMultiplier = dynamicTaxRate / 100;
 
-  const baseTotal = serviceRate && bookingQuantity ? serviceRate * Number(bookingQuantity) : 0;
-  const gstAmount = baseTotal * taxMultiplier;
-  const bookingTotal = baseTotal + gstAmount;
+  const effectiveQty = isVisitingFee ? 1 : (Number(bookingQuantity) || 0);
+  const baseTotal = serviceRate && effectiveQty ? serviceRate * effectiveQty : 0;
+  const gstAmount = Math.round(baseTotal * taxMultiplier * 100) / 100;
+  const bookingTotal = Math.round((baseTotal + gstAmount) * 100) / 100;
 
   useEffect(() => {
     if (mapPosition) setGeolocation(`${mapPosition[0].toFixed(6)}, ${mapPosition[1].toFixed(6)}`);
@@ -436,8 +474,8 @@ export function BookServicePage() {
       }
     }
 
-    if (serviceRate && (!bookingQuantity || Number(bookingQuantity) <= 0)) {
-      triggerError(`Please enter number of ${pricingUnit.toLowerCase()}.`, { quantity: true });
+    if (serviceRate && !isVisitingFee && (!bookingQuantity || Number(bookingQuantity) <= 0)) {
+      triggerError(`Please enter ${quantityInputLabel.toLowerCase()}.`, { quantity: true });
       return;
     }
 
@@ -459,7 +497,7 @@ export function BookServicePage() {
         pincode: form.pincode,
         lat: mapPosition?.[0] ?? null,
         lng: mapPosition?.[1] ?? null,
-        quantity: bookingQuantity ? Number(bookingQuantity) : 1,
+        quantity: isVisitingFee ? 1 : (bookingQuantity ? Number(bookingQuantity) : 1),
         metadata: {
           geolocation,
           custom_fields: customResponses,
@@ -794,72 +832,91 @@ export function BookServicePage() {
                     <div className="bs-pricing-card">
                       <div className="bs-pricing-header">
                         <div className="bs-pricing-info">
-                          <span className="bs-pricing-label">Rate per Unit</span>
+                          <span className="bs-pricing-label">{rateHeader}</span>
                           <div className="bs-pricing-rate">
-                            ₹{serviceRate.toLocaleString('en-IN')} <span className="bs-pricing-unit">/ {pricingUnit.toLowerCase()}</span>
+                            ₹{serviceRate.toLocaleString('en-IN')}{' '}
+                            {rateUnitSuffix && <span className="bs-pricing-unit">{rateUnitSuffix}</span>}
                           </div>
                         </div>
 
-                        <div className="bs-qty-wrapper">
-                          <span className="bs-qty-label">Quantity ({pricingUnit})</span>
-                          <div className={`bs-qty-control ${errorFields.quantity ? 'input-error' : ''}`}>
-                            <button
-                              type="button"
-                              className="bs-qty-btn"
-                              aria-label="Decrease quantity"
-                              onClick={() => {
-                                const current = Number(bookingQuantity) || 1;
-                                const next = Math.max(1, current - 1);
-                                setBookingQuantity(next);
-                                setModalError(null);
-                                setErrorFields(prev => ({ ...prev, quantity: false }));
-                              }}
-                            >
-                              <FaMinus size={11} />
-                            </button>
-                            <input
-                              type="number"
-                              min="1"
-                              step="0.5"
-                              value={bookingQuantity}
-                              onChange={e => {
-                                setBookingQuantity(e.target.value ? Number(e.target.value) : '');
-                                setModalError(null);
-                                setErrorFields(prev => (prev.quantity ? { ...prev, quantity: false } : prev));
-                              }}
-                              placeholder="Qty"
-                              className="bs-qty-input"
-                            />
-                            <button
-                              type="button"
-                              className="bs-qty-btn"
-                              aria-label="Increase quantity"
-                              onClick={() => {
-                                const current = Number(bookingQuantity) || 0;
-                                const next = current + 1;
-                                setBookingQuantity(next);
-                                setModalError(null);
-                                setErrorFields(prev => ({ ...prev, quantity: false }));
-                              }}
-                            >
-                              <FaPlus size={11} />
-                            </button>
+                        {!isVisitingFee ? (
+                          <div className="bs-qty-wrapper">
+                            <span className="bs-qty-label">{quantityInputLabel}</span>
+                            <div className={`bs-qty-control ${errorFields.quantity ? 'input-error' : ''}`}>
+                              <button
+                                type="button"
+                                className="bs-qty-btn"
+                                aria-label="Decrease quantity"
+                                onClick={() => {
+                                  const current = Number(bookingQuantity) || 1;
+                                  const next = Math.max(1, current - 1);
+                                  setBookingQuantity(next);
+                                  setModalError(null);
+                                  setErrorFields(prev => ({ ...prev, quantity: false }));
+                                }}
+                              >
+                                <FaMinus size={11} />
+                              </button>
+                              <input
+                                type="number"
+                                min="1"
+                                step="0.5"
+                                value={bookingQuantity}
+                                onChange={e => {
+                                  setBookingQuantity(e.target.value ? Number(e.target.value) : '');
+                                  setModalError(null);
+                                  setErrorFields(prev => (prev.quantity ? { ...prev, quantity: false } : prev));
+                                }}
+                                placeholder="Qty"
+                                className="bs-qty-input"
+                              />
+                              <button
+                                type="button"
+                                className="bs-qty-btn"
+                                aria-label="Increase quantity"
+                                onClick={() => {
+                                  const current = Number(bookingQuantity) || 0;
+                                  const next = current + 1;
+                                  setBookingQuantity(next);
+                                  setModalError(null);
+                                  setErrorFields(prev => ({ ...prev, quantity: false }));
+                                }}
+                              >
+                                <FaPlus size={11} />
+                              </button>
+                            </div>
                           </div>
-                        </div>
+                        ) : (
+                          <div className="bs-visiting-badge" style={{ alignSelf: 'center', fontSize: '0.82rem', background: '#eff6ff', color: '#1d4ed8', padding: '6px 14px', borderRadius: '6px', fontWeight: 600 }}>
+                            1 Site Visit Slot
+                          </div>
+                        )}
                       </div>
+
+                      {isVisitingFee && (
+                        <p style={{ margin: '8px 0 0 0', fontSize: '0.78rem', color: '#64748b', borderTop: '1px solid #e2e8f0', paddingTop: '6px' }}>
+                          *Advance visiting fee confirms your technician arrival and will be adjusted against the final service invoice.
+                        </p>
+                      )}
 
                       {baseTotal > 0 && (
                         <div className="bs-pricing-breakdown">
                           <div className="bs-breakdown-row">
-                            <span>Base Amount ({bookingQuantity} {pricingUnit.toLowerCase()} × ₹{serviceRate.toLocaleString('en-IN')}):</span>
+                            <span>
+                              {isVisitingFee
+                                ? 'Visiting & Inspection Fee:'
+                                : `Base Amount (${bookingQuantity} ${cleanUnit || 'unit'} × ₹${serviceRate.toLocaleString('en-IN')}):`}
+                            </span>
                             <span>₹{baseTotal.toLocaleString('en-IN')}</span>
                           </div>
                           <div className="bs-breakdown-row">
-                            <span>GST ({dynamicTaxRate}%):</span>
-                            <span>₹{gstAmount.toLocaleString('en-IN')}</span>
+                            <span>GST ({dynamicTaxRate}%{dynamicTaxRate === 0 ? ' - Exempt' : ''}):</span>
+                            <span style={dynamicTaxRate === 0 ? { color: '#16a34a', fontWeight: 600 } : undefined}>
+                              ₹{gstAmount.toLocaleString('en-IN')}
+                            </span>
                           </div>
                           <div className="bs-breakdown-total">
-                            <span>Estimated Total:</span>
+                            <span>{isVisitingFee ? 'Advance Payable Now:' : 'Estimated Total:'}</span>
                             <span className="bs-total-highlight">₹{bookingTotal.toLocaleString('en-IN')}</span>
                           </div>
                         </div>

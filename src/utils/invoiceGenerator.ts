@@ -94,8 +94,13 @@ export function generateInvoiceHtml(data: InvoiceData): string {
     ? (typeof data.subtotal === 'string' ? parseFloat(data.subtotal.replace(/[^0-9.-]+/g, '')) : data.subtotal)
     : 0;
 
-  // If subtotal equals total or tax is 0/missing, calculate 18% GST backwards
-  if (numericTax === 0 || numericSubtotal === 0 || numericSubtotal >= numericTotal) {
+  // Check if tax is explicitly 0 (e.g. Partner agricultural services exempt from GST)
+  const isExplicitZeroTax = data.taxAmount !== undefined && data.taxAmount !== null && Number(data.taxAmount) === 0;
+
+  if (isExplicitZeroTax) {
+    numericTax = 0;
+    numericSubtotal = numericTotal;
+  } else if (numericTax === 0 || numericSubtotal === 0 || numericSubtotal >= numericTotal) {
     numericSubtotal = Math.round((numericTotal / 1.18) * 100) / 100;
     numericTax = Math.round((numericTotal - numericSubtotal) * 100) / 100;
   }
@@ -197,10 +202,15 @@ export function generateInvoiceHtml(data: InvoiceData): string {
             <td style="padding: 5px 10px; color: #475569;">Subtotal (Taxable):</td>
             <td style="padding: 5px 10px; text-align: right; font-weight: 600;">₹${numericSubtotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
           </tr>
+          ${numericTax > 0 ? `
           <tr>
             <td style="padding: 5px 10px; color: #475569;">GST (18% Integrated):</td>
             <td style="padding: 5px 10px; text-align: right; font-weight: 600;">₹${numericTax.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-          </tr>
+          </tr>` : `
+          <tr>
+            <td style="padding: 5px 10px; color: #475569;">GST (0% - Exempt):</td>
+            <td style="padding: 5px 10px; text-align: right; font-weight: 600; color: #16a34a;">₹0.00</td>
+          </tr>`}
           <tr style="border-top: 2px solid #cbd5e1; font-weight: 800; font-size: 15px; color: #1e3a8a;">
             <td style="padding: 8px 10px;">Grand Total:</td>
             <td style="padding: 8px 10px; text-align: right;">₹${numericTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
