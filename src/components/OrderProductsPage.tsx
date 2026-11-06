@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { FaPlus, FaMinus, FaShoppingCart, FaTools } from 'react-icons/fa';
 import { productsApi } from '../api/productsApi';
+import { BASE_URL } from '../services/api';
 import { useServices } from '../hooks/useServices';
 import { useCart } from '../context/CartContext';
 import { SEOHead } from './SEOHead';

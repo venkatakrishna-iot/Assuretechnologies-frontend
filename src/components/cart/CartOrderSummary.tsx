@@ -13,7 +13,7 @@ interface CartOrderSummaryProps {
 }
 
 export const CartOrderSummary: React.FC<CartOrderSummaryProps> = ({
-  itemCount,
+  itemCount: _itemCount,
   subtotal,
   tax,
   total,

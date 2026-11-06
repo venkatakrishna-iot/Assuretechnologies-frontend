@@ -475,7 +475,7 @@ export function BookServicePage() {
     }
 
     if (serviceRate && !isVisitingFee && (!bookingQuantity || Number(bookingQuantity) <= 0)) {
-      triggerError(`Please enter ${quantityInputLabel.toLowerCase()}.`, { quantity: true });
+      triggerError(`Please enter ${(quantityInputLabel || 'quantity').toLowerCase()}.`, { quantity: true });
       return;
     }
 
