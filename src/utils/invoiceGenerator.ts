@@ -218,6 +218,34 @@ export function generateInvoiceHtml(data: InvoiceData): string {
         </table>
       </div>
 
+      ${!data.isService ? `
+      <div style="margin-top: 25px; margin-bottom: 24px; padding: 14px 16px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; text-align: left;">
+        <h5 style="margin: 0 0 10px 0; font-size: 13px; font-weight: 700; color: #0f172a; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;">Component Warranty Conditions</h5>
+        <ul style="margin: 0; padding-left: 18px; font-size: 11px; color: #334155; line-height: 1.6;">
+          <li style="margin-bottom: 6px;">
+            <strong>Manufacturer Warranty:</strong> Hardware components (cameras, NVRs/DVRs, hard drives) carry a 1-to-3-year manufacturer warranty from the date of purchase. The installer acts as the facilitator for these claims.
+          </li>
+          <li style="margin-bottom: 6px;">
+            <strong>Workmanship/Labor Warranty:</strong> Installation labor is typically covered for 90 days to 1 year. This covers faulty wiring, loose mounts, or incorrect configuration by the technicians.
+          </li>
+          <li style="margin-bottom: 6px;">
+            <strong>Warranty Exclusions:</strong> The warranty is strictly void under the following conditions:
+            <ul style="margin: 4px 0 2px 0; padding-left: 18px; list-style-type: circle;">
+              <li>Damage caused by lightning strikes, power surges, floods, or acts of God.</li>
+              <li>Vandalism, physical tampering, or unauthorized relocation of cameras.</li>
+              <li>Modifications to software settings, network routing, or firmware updates done by the client or a third party.</li>
+            </ul>
+          </li>
+          <li style="margin-bottom: 6px;">
+            <strong>Consumables Exclusion:</strong> Cables, connectors, power adapters, and batteries are generally excluded from long-term warranties or carry a heavily reduced coverage period (e.g., 90 days).
+          </li>
+          <li style="margin-bottom: 0;">
+            <strong>Advance Replacement Policy:</strong> Defective components must be tested and verified before a replacement is issued. Loaner cameras during the manufacturer repair window are not included unless a separate Annual Maintenance Contract (AMC) is signed.
+          </li>
+        </ul>
+      </div>
+      ` : ''}
+
       <div style="border-top: 1px solid #e2e8f0; padding-top: 14px; text-align: center; font-size: 12px; color: #64748b;">
         <p>Thank you for choosing Assure Technologies.</p>
       </div>

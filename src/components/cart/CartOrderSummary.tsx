@@ -2,7 +2,7 @@ import React from 'react';
 import { FaShieldAlt } from 'react-icons/fa';
 
 interface CartOrderSummaryProps {
-  itemCount: number;
+  itemCount?: number;
   subtotal: number;
   tax: number;
   total: number;
@@ -13,7 +13,6 @@ interface CartOrderSummaryProps {
 }
 
 export const CartOrderSummary: React.FC<CartOrderSummaryProps> = ({
-  itemCount: _itemCount,
   subtotal,
   tax,
   total,

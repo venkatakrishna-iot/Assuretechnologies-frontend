@@ -96,9 +96,18 @@ export function Footer() {
             </li>
             <li>
               <FaEnvelope className="contact-icon" />
-              <a href="mailto:info.assuretechnologies@gmail.com">
-                info.assuretechnologies@gmail.com
-              </a>
+              <div>
+                <div>
+                  <a href="mailto:info@roboticnaturalautofarming.com">
+                    info@roboticnaturalautofarming.com
+                  </a>
+                </div>
+                <div>
+                  <a href="mailto:support@roboticnaturalautofarming.com">
+                    support@roboticnaturalautofarming.com
+                  </a>
+                </div>
+              </div>
             </li>
             <li>
               <FaPhoneAlt className="contact-icon" />
