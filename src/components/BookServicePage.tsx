@@ -145,22 +145,25 @@ export function BookServicePage() {
   };
 
   const filteredServices = useMemo(() => {
+    const list = Array.isArray(allServices) ? allServices : [];
     if (categoryQuery) {
       const targetCat = categoryQuery.trim().toLowerCase();
-      return allServices.filter(s => {
-        const catName = (s.category?.name || '').toLowerCase();
+      return list.filter(s => {
+        const rawCat = typeof s.category === 'object' && s.category !== null ? s.category.name : s.category;
+        const catName = (rawCat || '').toLowerCase();
         return catName === targetCat || catName.includes(targetCat);
       });
     }
     if (serviceQuery) {
       const targetSvc = serviceQuery.trim().toLowerCase();
-      return allServices.filter(s => {
+      return list.filter(s => {
         const svcName = (s.name || '').toLowerCase();
-        const catName = (s.category?.name || '').toLowerCase();
+        const rawCat = typeof s.category === 'object' && s.category !== null ? s.category.name : s.category;
+        const catName = (rawCat || '').toLowerCase();
         return svcName.includes(targetSvc) || catName.includes(targetSvc);
       });
     }
-    return allServices;
+    return list;
   }, [allServices, categoryQuery, serviceQuery]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -646,7 +649,7 @@ export function BookServicePage() {
                   ? <img src={svc.image} alt={svc.name} className="bs-card-img" />
                   : <div className="bs-card-icon" />}
                 <div className="bs-card-body">
-                  <span className="bs-card-label">{svc.category?.name || 'Service'}</span>
+                  <span className="bs-card-label">{(typeof svc.category === 'object' && svc.category !== null ? svc.category.name : svc.category) || 'Service'}</span>
                   <h3 className="bs-card-title">{svc.name}</h3>
                   <button className="bs-book-btn" onClick={() => handleBookNow(svc.name)}>Book Now</button>
                 </div>

@@ -86,7 +86,7 @@ export function SearchPage() {
           const tokens = q.split(/\s+/).filter(Boolean);
           fetchedServices = fallbackServices.filter(s => {
             const name = (s.name || '').toLowerCase();
-            const catName = (s.category?.name || '').toLowerCase();
+            const catName = ((typeof s.category === 'object' && s.category !== null ? s.category.name : s.category) || '').toLowerCase();
             return tokens.every(token => name.includes(token) || catName.includes(token));
           });
         }
@@ -320,7 +320,7 @@ export function SearchPage() {
                       </div>
 
                       <div className="search-product-body">
-                        <span className="search-product-category">{product.service}</span>
+                        <span className="search-product-category">{typeof product.service === 'object' && product.service !== null ? (product.service as any).name : (product.service || 'General')}</span>
                         <h3 className="search-product-name" title={product.name}>
                           {product.name}
                         </h3>
@@ -411,7 +411,7 @@ export function SearchPage() {
                           </div>
                           <div className="search-service-title-area">
                             <span className="search-service-category">
-                              {service.category?.name || 'On-Demand Service'}
+                              {(typeof service.category === 'object' && service.category !== null ? service.category.name : service.category) || 'On-Demand Service'}
                             </span>
                             <h3 className="search-service-name">{service.name}</h3>
                           </div>
@@ -429,7 +429,7 @@ export function SearchPage() {
                           </div>
 
                           <Link
-                            to={`/book-service?category=${encodeURIComponent(service.category?.name || service.name)}`}
+                            to={`/book-service?category=${encodeURIComponent((typeof service.category === 'object' && service.category !== null ? service.category.name : service.category) || service.name)}`}
                             className="search-book-btn"
                           >
                             View Category <FaArrowRight />

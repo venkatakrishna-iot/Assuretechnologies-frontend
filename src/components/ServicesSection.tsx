@@ -25,14 +25,14 @@ export function ServicesSection() {
       </div>
 
       <div className="services-grid">
-        {services.map(service => (
+        {(Array.isArray(services) ? services : []).map(service => (
           <div key={service.id} className="service-card">
             <div className="service-icon image-icon">
               {service.image
                 ? <img src={service.image} alt={service.name} />
                 : <div className="service-placeholder" />}
             </div>
-            <h5 className="service-label">{service.category?.name}</h5>
+            <h5 className="service-label">{(typeof service.category === 'object' && service.category !== null ? service.category.name : service.category) || ''}</h5>
             <p className="service-title">{service.name}</p>
           </div>
         ))}

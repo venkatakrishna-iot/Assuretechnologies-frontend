@@ -7,8 +7,11 @@ export function useServices() {
 
   useEffect(() => {
     fetchAllServices()
-      .then(setServices)
-      .catch(err => console.error('Failed to load services', err))
+      .then(data => setServices(Array.isArray(data) ? data : []))
+      .catch(err => {
+        console.error('Failed to load services', err);
+        setServices([]);
+      })
       .finally(() => setLoading(false));
   }, []);
 

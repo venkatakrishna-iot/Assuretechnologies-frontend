@@ -9,15 +9,17 @@ export function BookTechnician() {
   // Deduplicate services by category so each category is displayed only once
   const categories = useMemo(() => {
     const map = new Map<string, { id: string; name: string; image?: string }>();
+    const list = Array.isArray(services) ? services : [];
 
-    for (const s of services) {
-      const catName = s.category?.name?.trim();
+    for (const s of list) {
+      const rawCat = typeof s.category === 'object' && s.category !== null ? s.category.name : s.category;
+      const catName = rawCat?.trim() || s.name?.trim();
       if (!catName) continue;
 
       const existing = map.get(catName);
       if (!existing) {
         map.set(catName, {
-          id: s.category?.id || s.id,
+          id: (typeof s.category === 'object' && s.category?.id) ? s.category.id : s.id,
           name: catName,
           image: s.image,
         });

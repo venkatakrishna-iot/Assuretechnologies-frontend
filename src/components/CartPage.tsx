@@ -128,6 +128,15 @@ export function CartPage() {
            const originalPrice = parseFloat((originalPriceExclTax + originalTaxAmount).toFixed(2));
            const finalPrice = parseFloat((sellingPriceExclTax + taxAmount).toFixed(2));
 
+           const catName = typeof p.category === 'object' && p.category !== null && p.category.name
+             ? p.category.name
+             : (typeof p.category === 'string' ? p.category : (p.service || 'General'));
+
+           const bannerImg = p.banner || (Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : null);
+           const image = bannerImg
+             ? (bannerImg.startsWith('http') || bannerImg.startsWith('blob:') ? bannerImg : `${BASE_URL}${bannerImg.startsWith('/') ? '' : '/'}${bannerImg}`)
+             : 'https://placehold.co/300x200?text=No+Image';
+
            return {
              ...p,
              originalPrice,
@@ -135,8 +144,8 @@ export function CartPage() {
              selling_price_excl_tax: parseFloat(sellingPriceExclTax.toFixed(2)),
              tax_amount: parseFloat(taxAmount.toFixed(2)),
              tax_slab: slab,
-             service: p.category || 'General',
-             image: p.banner ? (p.banner.startsWith('http') || p.banner.startsWith('blob:') ? p.banner : `${BASE_URL}${p.banner.startsWith('/') ? '' : '/'}${p.banner}`) : 'https://placehold.co/300x200?text=No+Image'
+             service: catName,
+             image
            };
         });
         setProducts(formattedProducts);

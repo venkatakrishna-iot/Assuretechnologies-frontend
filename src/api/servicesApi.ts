@@ -36,5 +36,16 @@ export interface BackendService {
 
 export const fetchAllServices = async (search = '') => {
   const response = await axiosInstance.get(`/services`, { params: { search } });
-  return response.data.data.services as BackendService[];
+  const raw = response.data?.data;
+  const list = Array.isArray(raw) ? raw : (Array.isArray(raw?.services) ? raw.services : []);
+  
+  return list.map((item: any) => ({
+    ...item,
+    category: typeof item.category === 'string'
+      ? { id: item.category, name: item.category }
+      : item.category,
+    pricing_type: typeof item.pricing_type === 'string'
+      ? { id: item.pricing_type, name: item.pricing_type, label: item.pricing_type }
+      : item.pricing_type
+  })) as BackendService[];
 };

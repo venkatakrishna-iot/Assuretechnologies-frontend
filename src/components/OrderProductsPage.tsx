@@ -110,14 +110,24 @@ export function OrderProductsPage() {
         const originalPrice = parseFloat((originalPriceExclTax + originalTaxAmount).toFixed(2));
         const finalPrice = parseFloat((sellingPriceExclTax + taxAmount).toFixed(2));
 
+        const catName = typeof p.category === 'object' && p.category !== null && p.category.name
+          ? p.category.name
+          : (typeof p.category === 'string' ? p.category : (p.service || 'General'));
+
+        const bannerImg = p.banner || (Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : null);
+        const image = bannerImg
+          ? (bannerImg.startsWith('http') || bannerImg.startsWith('blob:') ? bannerImg : `${BASE_URL}${bannerImg.startsWith('/') ? '' : '/'}${bannerImg}`)
+          : 'https://placehold.co/300x200?text=No+Image';
+
         return {
           ...p,
           originalPrice,
           price: finalPrice,
           discount: cleanDisc,
           tax_slab: slab,
-          service: p.category || p.service || 'General',
-          image: p.banner ? (p.banner.startsWith('http') || p.banner.startsWith('blob:') ? p.banner : `${BASE_URL}${p.banner.startsWith('/') ? '' : '/'}${p.banner}`) : 'https://placehold.co/300x200?text=No+Image'
+          service: catName,
+          category: catName,
+          image
         };
       });
 
@@ -295,7 +305,7 @@ export function OrderProductsPage() {
                       <img src={product.image} alt={product.name} loading="lazy" />
                     </div>
                     <div className="op-card-body">
-                      <span className="op-card-cat">{product.category || product.service}</span>
+                      <span className="op-card-cat">{typeof product.service === 'object' && product.service !== null ? product.service.name : (product.service || (typeof product.category === 'object' ? product.category?.name : product.category) || 'General')}</span>
                       <h4 className="op-card-name">{product.name}</h4>
                       <p className="op-card-desc">{product.description}</p>
 

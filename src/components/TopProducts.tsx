@@ -36,6 +36,15 @@ export function TopProducts() {
           const originalPrice = parseFloat((originalPriceExclTax + originalTaxAmount).toFixed(2));
           const finalPrice = parseFloat((sellingPriceExclTax + taxAmount).toFixed(2));
 
+          const catName = typeof p.category === 'object' && p.category !== null && p.category.name
+            ? p.category.name
+            : (typeof p.category === 'string' ? p.category : (p.service || 'General'));
+
+          const bannerImg = p.banner || (Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : null);
+          const image = bannerImg
+            ? (bannerImg.startsWith('http') || bannerImg.startsWith('blob:') ? bannerImg : `${BASE_URL}${bannerImg.startsWith('/') ? '' : '/'}${bannerImg}`)
+            : 'https://placehold.co/300x200?text=No+Image';
+
           return {
             ...p,
             originalPrice,
@@ -44,8 +53,8 @@ export function TopProducts() {
             tax_slab: slab,
             rating: p.rating || 4,
             reviewCount: p.reviewCount || 15,
-            service: p.category || 'General',
-            image: p.banner ? (p.banner.startsWith('http') || p.banner.startsWith('blob:') ? p.banner : `${BASE_URL}${p.banner.startsWith('/') ? '' : '/'}${p.banner}`) : 'https://placehold.co/300x200?text=No+Image'
+            service: catName,
+            image
           };
         });
 
@@ -106,7 +115,7 @@ export function TopProducts() {
                   <img src={product.image} alt={product.name} loading="lazy" />
                 </div>
                 <div className="tp-card-body">
-                  <span className="tp-card-cat">{product.service}</span>
+                  <span className="tp-card-cat">{typeof product.service === 'object' && product.service !== null ? product.service.name : (product.service || 'General')}</span>
                   <h4 className="tp-card-name">{product.name}</h4>
                   
                   <div className="tp-card-price-row">

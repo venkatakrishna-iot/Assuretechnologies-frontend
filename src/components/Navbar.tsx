@@ -108,16 +108,20 @@ function SearchBar({ isMobile }: { isMobile?: boolean }) {
         const mapped: SearchSuggestion[] = Array.isArray(raw) ? raw.map((p: any) => {
           const base = parseFloat(p.base_price) || 0;
           const disc = parseFloat(p.discount) || 0;
-          const img = p.banner
-            ? (p.banner.startsWith('http') || p.banner.startsWith('blob:')
-              ? p.banner
-              : `${BASE_URL}${p.banner.startsWith('/') ? '' : '/'}${p.banner}`)
+          const bannerImg = p.banner || (Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : null);
+          const img = bannerImg
+            ? (bannerImg.startsWith('http') || bannerImg.startsWith('blob:')
+              ? bannerImg
+              : `${BASE_URL}${bannerImg.startsWith('/') ? '' : '/'}${bannerImg}`)
             : 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=100&h=100&fit=crop';
+          const catName = typeof p.category === 'object' && p.category !== null && p.category.name
+            ? p.category.name
+            : (typeof p.category === 'string' ? p.category : 'General');
           return {
             type: 'product',
             id: p.id || p.product_id,
             name: p.name,
-            category: p.category || 'General',
+            category: catName,
             price: disc > 0 ? base - (base * (disc / 100)) : base,
             image: img,
             url: `/order-products?q=${encodeURIComponent(p.name)}`
@@ -295,7 +299,7 @@ function SearchBar({ isMobile }: { isMobile?: boolean }) {
                       </span>
                       <div className="suggestion-text-group">
                         <span className="suggestion-title">{item.name}</span>
-                        {item.category && <span className="suggestion-category-tag">{item.category} Category ➔</span>}
+                        {item.category && <span className="suggestion-category-tag">{typeof item.category === 'object' ? (item.category as any)?.name : item.category} Category ➔</span>}
                       </div>
                     </div>
                     {item.rate && <span className="suggestion-rate">{item.rate}</span>}
