@@ -293,6 +293,24 @@ export function CartPage() {
           name: 'Assure Technologies',
           description: 'Order #' + res.data.order.order_number,
           order_id: res.data.razorpayOrderId,
+          config: {
+            display: {
+              blocks: {
+                upi: {
+                  name: 'Pay via UPI',
+                  instruments: [
+                    {
+                      method: 'upi'
+                    }
+                  ]
+                }
+              },
+              sequence: ['block.upi'],
+              preferences: {
+                show_default_blocks: true
+              }
+            }
+          },
           handler: async function (response: any) {
             try {
               setIsVerifyingPayment(true);

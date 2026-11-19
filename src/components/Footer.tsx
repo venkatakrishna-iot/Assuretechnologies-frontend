@@ -112,8 +112,7 @@ export function Footer() {
             <li>
               <FaPhoneAlt className="contact-icon" />
               <div>
-                <div>Contact: <a href="tel:8639060213">8639060213</a></div>
-                <div>Sales: <a href="tel:8008659767">8008659767</a></div>
+                <div>Contact & Sales: <a href="tel:8639060213">8639060213</a></div>
                 <div>Tech support: <a href="tel:9505261283">95052 61283</a></div>
               </div>
             </li>

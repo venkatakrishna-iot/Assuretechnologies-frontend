@@ -7,9 +7,10 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "cap:build": "npm run build && npx cap sync",
-    "cap:sync": "npx cap sync android",
+    "cap:build": "npm run build && npx cap sync && npm run cap:clean-assets",
+    "cap:sync": "npx cap sync android && npm run cap:clean-assets",
     "cap:open": "npx cap open android",
+    "cap:clean-assets": "node -e \"const fs=require('fs'); const p='android/app/src/main/assets/public/downloads'; if(fs.existsSync(p)) fs.rmSync(p, {recursive:true, force:true});\"",
     "cap:apk": "npm run cap:build && cmd /c \"set JAVA_HOME=D:\\Android-studio\\jbr&& set PATH=%JAVA_HOME%\\bin;%PATH%&& cd android && gradlew.bat assembleDebug\""
   },
   "dependencies": {

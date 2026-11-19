@@ -36,7 +36,7 @@ const APKS_DATA: AppApkInfo[] = [
     badgeColor: '#16a34a',
     icon: FaMobileAlt,
     version: 'v1.0.0',
-    size: '24.4 MB',
+    size: '6.0 MB',
     downloadUrl: '/downloads/assure-customer.apk',
     filename: 'assure-customer.apk',
     description: 'Browse smart enterprise solutions, order solar & IoT hardware, schedule certified technicians on-demand, and track service requests with real-time updates.',

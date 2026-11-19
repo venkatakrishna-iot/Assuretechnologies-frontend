@@ -363,6 +363,24 @@ export function OrderDetailsPage() {
         name: 'Assure Technologies',
         description: 'Remaining Balance Payment',
         order_id: res.data.razorpayOrderId,
+        config: {
+          display: {
+            blocks: {
+              upi: {
+                name: 'Pay via UPI',
+                instruments: [
+                  {
+                    method: 'upi'
+                  }
+                ]
+              }
+            },
+            sequence: ['block.upi'],
+            preferences: {
+              show_default_blocks: true
+            }
+          }
+        },
         handler: async function (response: any) {
           try {
             await ordersApi.verifyRemainingBalancePayment(orderNumber, {
@@ -382,12 +400,20 @@ export function OrderDetailsPage() {
           email: orderDetails.customerEmail,
           contact: orderDetails.customerContact
         },
+        modal: {
+          ondismiss: function () {
+            Toast.fire({ icon: 'warning', title: 'Payment cancelled. You can retry anytime.' });
+          }
+        },
         theme: {
           color: '#3399cc'
         }
       };
 
       const paymentObject = new (window as any).Razorpay(options);
+      paymentObject.on('payment.failed', function (response: any) {
+        Toast.fire({ icon: 'error', title: response.error?.description || 'Payment failed. Please retry.' });
+      });
       paymentObject.open();
 
     } catch (err: any) {

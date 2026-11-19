@@ -527,6 +527,24 @@ export function BookServicePage() {
           name: 'Assure Technologies',
           description: `Service Booking: ${selectedService}`,
           order_id: bookingResult.razorpay_order_id,
+          config: {
+            display: {
+              blocks: {
+                upi: {
+                  name: 'Pay via UPI',
+                  instruments: [
+                    {
+                      method: 'upi'
+                    }
+                  ]
+                }
+              },
+              sequence: ['block.upi'],
+              preferences: {
+                show_default_blocks: true
+              }
+            }
+          },
           handler: async function (response: any) {
             try {
               setIsProcessing(true);
