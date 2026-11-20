@@ -44,6 +44,9 @@ export function Footer() {
             <a href="#" aria-label="Twitter"><FaTwitter /></a>
             <a href="#" aria-label="YouTube"><FaYoutube /></a>
           </div>
+          <div className="footer-partner-contact">
+            Become a Partner, Technician, Vendor Please Contact us - <a href="tel:8639060213">8639060213</a>
+          </div>
         </div>
 
         {/* Column 2: Quick Links */}
@@ -86,13 +89,13 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Column 4: Contact Us */}
+        {/* Column 4: Corporate Office */}
         <div className="footer-col contact-col">
-          <h4 className="footer-heading">Contact Us</h4>
+          <h4 className="footer-heading">Corporate Office</h4>
           <ul className="footer-contact-list">
             <li>
               <FaMapMarkerAlt className="contact-icon" />
-              <span>1st Floor, 5-15 Shop No 1, Dandu Venkata Ramaiah Commercial, A Konduru, NTR District, Andhra Pradesh - 521227</span>
+              <span>1st Floor, 5-15 Shop No 1, Dandu Venkata Ramaiah Commercial, A Konduru, NTR District, Amaravathi, Andhra Pradesh - 521227</span>
             </li>
             <li>
               <FaEnvelope className="contact-icon" />

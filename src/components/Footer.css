@@ -68,6 +68,26 @@
   color: #3b82f6; /* Blue accent */
 }
 
+/* ─── Partner & Vendor Contact ──────────────────────────────────── */
+.footer-partner-contact {
+  margin-top: 20px;
+  color: #9ca3af;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.footer-partner-contact a {
+  color: #ffffff;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.footer-partner-contact a:hover {
+  color: #3b82f6;
+  text-decoration: underline;
+}
+
 /* ─── Links ──────────────────────────────────────────────────────── */
 .footer-links {
   list-style: none;
