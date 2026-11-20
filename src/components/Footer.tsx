@@ -45,7 +45,7 @@ export function Footer() {
             <a href="#" aria-label="YouTube"><FaYoutube /></a>
           </div>
           <div className="footer-partner-contact">
-            Become a Partner, Technician, Vendor Please Contact us - <a href="tel:8639060213">8639060213</a>
+            Become a Partner, Agent, Technician, Vendor Please Contact us - <a href="tel:8639060213">8639060213</a>
           </div>
         </div>
 
